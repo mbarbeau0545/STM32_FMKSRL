@@ -1,0 +1,64 @@
+------------Générale--------------------
+- Dans un premier temps 
+    - Ce module doit être compatible smt32g4/ stm32f4 / stm32f0, en gros tout,
+    - Ce module doit permettre de recevoir/ transmettre 
+    des messages  en UART / USART. 
+    - avec n'importe quels baudrate standard. 
+
+    - Il doit aussi pouvoir gérer nativement les communications type AT ou type GPS (réception continue de data)
+        L'utilisateur contact une API, lui donne la commande à envoyer
+        et s'attend à recevoir une réponse, 
+        Soit cela se fait Polling ou le retour de la fonction est la réponse sous un timeout
+        Soit cela se fait via une interruption côté module et via un appelle de callback pour l'utilisateur 
+
+    - Il doit aussi pouvoir gérer les communication où ce sont des informations recçu tout les x millisecondes
+        L'utilisateur contact une API et dit je veux recevoir tout les messages qu'importe la taille dès que tu les reçoits
+        Soit en donnant un nombre de bits à recevoir avant qu'on l'appelle avec les données
+        Soit en disant donne moi les données quand tu aura reçu ce trigger '\r\n' par exemple 
+
+- Dans un second temps 
+    - il doit pouvoir gérer les modes un peu complex où j'ai pas tout compris 
+        mais la base doit être déjà envisagé dans la première partie 
+        plus qu'a implémenté 
+        - HalfDuplex/MultiProcess/LIN
+
+------------Transmettre message--------------------
+Il existe plusieurs mode d'envoie de message.
+Lorsque l'utilisateur contactera une API 'TransmitMsg' il devra renseigné" avec le message et le size
+une valeur d'enum qui fera office de 'Mode' d'envoi 
+- Il y a le mode 'Transmit Once' on l'on envoi juste un message sur la ligne Tx et c'est tout
+- Il y a le mode 'Transmit and Receive with Timeout' l'utilisateur envoi un message et s'attend à recevoir un 
+    message (typique des commande AT par exemple). l'utilisaateur spécifie un Timeout en millisecondes qui servira
+    au Hardware à dire quand est-ce qu'il suppose que le message reçu est terminé. 
+    Par exemple l'utilisateur envoi un message AT, s'attend à AT\nOK\r\n, donc met un time de 100 ms 
+    Ce qui veut dire qu'une fois que le Hardware commence à recevoir les bytes, si pendant 100 ms il ne reçoit plus de 
+    message il considère que le message est terminé et appelle le software qui vous appellera avec le message
+- Il y le mode 'Transmit et Receive with Size' même principe que plus haut, sdauf que le trigger est la taille des bytes reçu
+
+------------Réception message--------------------
+Il exist également plusieurs mode.
+- Le plus simple où l'utilisateur veut ponctuellement voir s'il y a un message dans le buffer d'attente, le software lui donne 
+    s'il y a quelque chose, s'il n'y a rien, il contact une API hardware en mode API un court instant pour voir s'il y a quelque chose et
+    donne ce qu'il a à l'utilisateur, si rien n'est reçu WARNING_NO_OPERATION doit être rendu.
+- Le mode 'Receive Once Size' l'utilisateur s'attend à recevoir un message ponctuel de X bytes et lorsque le software les aura reçu 
+    il appelera l'utilisateur avec ses données 
+- Le mode 'Receive Once TimeOut' identique au mode précédent, l'utilisateur, s'attend à recevoir un message d'une taille 
+    inconnu et spécifie un timeout en milliseconde.
+- Le mode 'Receive Cylic Size', l'utilisateur s'attend à recevoir périodiquement des messages de taille connue, il sera appelé 
+    à chaque fois x bytes seront reçu
+- Le mode 'Receive Cyulic Timeout' : l'utilisateur s'attend à recevoir des messages périodique mais de taille variable,
+    à chaque fois que le hardware recevra un message et que x milliseconde auront passé, il appelera le software qui vous apellera à son tour.
+
+------------Gestion des buffers Rx/Tx--------------------
+Chaque UART/USART possède un buffer Rx et un buffer Tx, l'utilisateur spécifie leur taille maximale
+dans la configuration dédié Excel.
+
+Lorsque l'utilisateur va vouloir envoyé un message plusieurs cas de figure 
+    - il n'y a pas de transmission en cours et il y a de la place dans le buffer 
+        on ajoute simplement le msg dans le buffer et suivant la cfg user (poll, IT, Dma) on envoi le msg 
+
+    - Un message est en cours d'envoi mais il y assez de dans le buffer, 
+        on ajoute le msg dans le buffer et on set un flag comme quoi il y a un message en attente. 
+
+    - Un message est un cours d'envoie et le buffer est plein, l'utilsateur ne peux envoyé son message 
+        et un retcode WARNING_BUSY est levé 

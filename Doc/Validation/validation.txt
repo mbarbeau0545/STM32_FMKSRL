@@ -1,0 +1,25 @@
+test fait avec USART 2, Protocol UART,Mode UART, PA2-> Tx et PA3 -> Rx, Serial Line 1 
+
+- Transmission en mode Polling   -> Pass, commit : f2cf851d
+- Transmission en mode Interrupt -> Pass, commit : 44749aa8
+- Transmission en mode DMA       ->
+
+- Réception cyclic de message en mode size, IT -> Pass, commit : fa242a14
+- Réception Cyclic de message en mode Idle, IT-> pass, commit : 30c7d24a
+- Réception cyclic de message en mode size, DMA -> pass 
+- Réception Cyclic de message en mode Idle, DMA -> pass 
+
+- Transmission/Réception d'un message size, IT -> pass 
+- Transmission/Réception d'un message size, IT -> pass 
+- Transmission/Réception d'un message Idle, DMA -> pass
+- Transmission/Réception d'un message Idle, DMA -> pass
+-Configurer une réception cyclic size puis 
+    Transmission/Réception d'un message size, IT -> pass
+- Configurer une réception cyclic Idle puis 
+    Transmission/Réception d'un message size, IT -> pass 
+- Configurer une réception cyclic idle puis 
+    Transmission/Réception d'un message size, IT -> pass
+- Configurer une réception cyclic Idle puis 
+    Transmission/Réception d'un message Idle, IT -> pass 
+- En mode interruption overflow du buffer
+    et réinitilaisation des index Write/Read -> pass, commit : 561ce89b

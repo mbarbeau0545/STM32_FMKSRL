@@ -1,0 +1,13 @@
+Le but du module est de gérer efficacement l'UART et l'USART sur toutes les familles 
+Pour ce faire, d'un point de vue utilisateur, on utilise des Serial_Line 
+sans se soucier de savoir si c'est de l'UART ou de l'USART.
+
+Par exemple on dit tel Serial Ligne je veux la configurer un UART, et en tel mode
+    ou je veux la configurer en USART multiplexMode etc etc 
+
+D'un point de vue implémentation, on aura une structure qui repertorie les informations 
+générales de la ligne et une strucutre pour stockées les USART bstpInit et une autre pour les UART,
+lorsque l'utilisateur utilisera l' API de configuration de la ligne, on mappera 
+la serial Info vers le HANDLE typedef UART ou USART, et lorsque l'utilisateur utilisera 
+les API pour transmettre recevoir etc, on sera quelle UART/USART il faut 
+manipuler et ce qui est possible ou pas de faire.

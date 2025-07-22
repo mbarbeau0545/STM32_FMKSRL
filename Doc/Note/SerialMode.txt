@@ -1,0 +1,61 @@
+1. Multi-processor mode
+Fonctionnement
+Le mode multi-processeur permet à un périphérique USART de faire 
+partie d’un réseau de dispositifs 
+connectés à une ligne série unique.
+
+Problème adressé : Sans ce mode, tous les dispositifs recevant 
+des données sur la ligne doivent continuellement traiter chaque message,
+ ce qui peut être inefficace.
+Solution : En mode multi-processeur, 
+le périphérique reste en veille tant qu’un message ne lui est pas 
+spécifiquement destiné.
+Mécanisme
+Adresse de wake-up :
+Une trame spéciale contenant une "adresse" est envoyée pour 
+réveiller un périphérique spécifique.
+Tous les dispositifs reçoivent cette trame, mais seul celui 
+dont l'adresse correspond sortira de l'état Idle.
+Caractéristique de l’adresse :
+En mode multi-processeur, un bit spécifique 
+(par exemple, le bit de parité ou un bit spécifique dans la trame UART)
+indique si la trame est une adresse ou des données.
+Application typique
+Communication entre un maître et plusieurs esclaves.
+Exemple : Un microcontrôleur maître interroge périodiquement
+ plusieurs périphériques esclaves connectés sur la même ligne série.
+2. Full-Duplex Mode
+Fonctionnement
+En mode full-duplex, la communication peut se faire
+simultanément dans les deux directions :
+
+Une ligne TX (transmission) pour envoyer des données.
+Une ligne RX (réception) pour recevoir des données.
+Avantages
+La transmission et la réception sont indépendantes, 
+permettant des échanges rapides.
+Application typique
+Communication entre deux dispositifs nécessitant des
+ échanges constants et bidirectionnels, comme un microcontrôleur 
+ et un PC.
+3. Single-wire Half-Duplex Mode
+Fonctionnement
+En mode half-duplex, une seule ligne est utilisée pour la
+ transmission et la réception :
+
+Une seule broche (généralement TX ou RX reconfigurée) est
+ partagée pour envoyer et recevoir les données.
+Lorsque le périphérique envoie des données, il désactive 
+temporairement sa capacité à recevoir, et inversement.
+Caractéristiques
+La communication est séquentielle : on ne peut pas 
+transmettre et recevoir simultanément.
+La broche de communication doit être configurée comme 
+sortie pendant la transmission et comme entrée pendant la réception.
+Avantages
+Réduction du nombre de broches nécessaires pour la communication.
+Idéal pour les applications où les ressources matérielles 
+(broches GPIO) sont limitées.
+Application typique
+Communication avec des périphériques simples ou dans des
+ environnements où une seule ligne série est disponible.

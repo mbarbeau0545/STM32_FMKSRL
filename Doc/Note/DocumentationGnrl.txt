@@ -1,0 +1,58 @@
+Le protocole de communication UART (Universal Asynchronous 
+Receiver-Transmitter) est un des moyens les plus couramment 
+utilisés pour transmettre des données série entre deux dispositifs 
+électroniques. Voici une explication détaillée des caractéristiques, 
+du fonctionnement et des concepts clés liés au UART :
+
+Un message UART typique se compose de plusieurs parties :
+
+Start bit :
+
+Indique le début de la transmission.
+L’émetteur tire la ligne à 0 (niveau bas) pendant une durée 
+équivalente à un bit.
+Data bits :
+
+Les données utiles à transmettre (typiquement 5 à 8 bits).
+Transmises du bit le moins significatif (LSB) au bit le plus 
+significatif (MSB).
+Parity bit (facultatif) :
+
+Utilisé pour la détection d’erreurs simples.
+Ce bit peut être pair (even), impair (odd), ou absent.
+Stop bit(s) :
+
+Indique la fin de la transmission.
+La ligne est tirée à 1 (niveau haut) pendant une durée équivalente 
+à un ou plusieurs bits (1, 1.5, ou 2 bits).
+
+Pour qu'une communication UART fonctionne, les deux dispositifs 
+doivent être configurés avec les mêmes paramètres :
+
+Baud rate : Vitesse de transmission (bits par seconde). 
+Par exemple : 9600, 115200 bps.
+Nombre de bits de données : 5 à 8 bits 
+(parfois 9 bits dans certains matériels).
+Parité : Even, odd, none.
+Nombre de stop bits : 1, 1.5 ou 2.
+
+6. Limites du UART
+Pas d’horloge partagée :
+
+Cela impose une précision élevée des horloges des deux dispositifs.
+Une différence supérieure à 2-3% entre les horloges peut entraîner 
+des erreurs.
+Full-duplex limité :
+
+Bien que l’UART puisse transmettre et recevoir simultanément, 
+il ne permet pas de connecter directement plusieurs émetteurs 
+sans protocole supplémentaire.
+Vitesse limitée :
+
+Les communications UART ne sont pas optimales pour les hautes vitesses 
+(>1 Mbps).
+
+En mode Polling la longueur des messages impact la vitesse d'exécution du programme.
+Pour de gros échange, on utilisera l'interrupt voire le DMA.
+POur l'interruption, la transmission a lieu en arrière plan et le µC appelle HAL_UART_TcCpltCallback une fois
+qu'il a transmis ses 8 bits pour ne pas bloquer l'application s'il doit envoyer 300 bits

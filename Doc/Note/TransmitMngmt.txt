@@ -1,0 +1,162 @@
+Structure ajustée :
+Ajout de variables pour suivre les indices de début et fin (pour une gestion de buffer circulaire).
+
+c
+Copier le code
+typedef struct 
+{
+    t_uint8 *RxBuffer_pu8;       /*!< Pointeur vers le buffer Rx */
+    t_uint8 *TxBuffer_pu8;       /*!< Pointeur vers le buffer Tx */
+    
+    t_uint16 RxSizeTaken_u16;    /*!< Taille actuelle des données reçues */
+    t_uint16 TxSizeTaken_u16;    /*!< Taille actuelle des données à transmettre */
+
+    t_uint16 RxBufferSize_u16;   /*!< Taille maximale du buffer Rx */
+    t_uint16 TxBufferSize_u16;   /*!< Taille maximale du buffer Tx */
+
+    t_uint16 TxWriteIndex_u16;   /*!< Indice d'écriture pour le buffer Tx */
+    t_uint16 TxReadIndex_u16;    /*!< Indice de lecture pour le buffer Tx */
+
+    t_uint16 RxWriteIndex_u16;   /*!< Indice d'écriture pour le buffer Rx */
+    t_uint16 RxReadIndex_u16;    /*!< Indice de lecture pour le buffer Rx */
+
+    t_eFMKSRL_BufferFlag buffFlag_e; /*!< Etat général des buffers (BUSY, READY, etc.) */
+} UART_BufferManager_s;
+Transmission de données :
+L'utilisateur appelle une fonction d'envoi de message.
+Si l'UART est BUSY mais qu'il reste de la place dans le buffer :
+Le message est ajouté à la fin du buffer circulaire.
+Un flag est mis pour indiquer qu'une nouvelle transmission doit être déclenchée après la fin du message en cours.
+Si l'UART est READY, le message démarre directement.
+Code exemple :
+c
+Copier le code
+HAL_StatusTypeDef UART_BufferedTransmit(UART_BufferManager_s *uartBuffer, UART_HandleTypeDef *huart, t_uint8 *pData, t_uint16 size)
+{
+    // Vérifier si le message rentre dans le buffer
+    if ((uartBuffer->TxSizeTaken_u16 + size) > uartBuffer->TxBufferSize_u16)
+    {
+        return HAL_ERROR; // Buffer plein
+    }
+
+    // Copier les données dans le buffer circulaire
+    for (t_uint16 i = 0; i < size; i++)
+    {
+        uartBuffer->TxBuffer_pu8[uartBuffer->TxWriteIndex_u16] = pData[i];
+        uartBuffer->TxWriteIndex_u16 = (uartBuffer->TxWriteIndex_u16 + 1) % uartBuffer->TxBufferSize_u16;
+    }
+
+    uartBuffer->TxSizeTaken_u16 += size;
+
+    // Si aucune transmission en cours, démarrer l'envoi
+    if (uartBuffer->buffFlag_e != UART_BUFFER_BUSY)
+    {
+        uartBuffer->buffFlag_e = UART_BUFFER_BUSY;
+
+        // Calculer la taille restante jusqu'à la fin du buffer
+        t_uint16 spaceToEnd = uartBuffer->TxBufferSize_u16 - uartBuffer->TxReadIndex_u16;
+        t_uint16 dataToSend = (uartBuffer->TxSizeTaken_u16 < spaceToEnd) ? uartBuffer->TxSizeTaken_u16 : spaceToEnd;
+
+        // Démarrer la transmission
+        HAL_UART_Transmit_IT(huart, &uartBuffer->TxBuffer_pu8[uartBuffer->TxReadIndex_u16], dataToSend);
+    }
+
+    return HAL_OK;
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    UART_BufferManager_s *uartBuffer = /* récupérer votre buffer */;
+    
+    // Mettre à jour l'indice de lecture
+    t_uint16 spaceToEnd = uartBuffer->TxBufferSize_u16 - uartBuffer->TxReadIndex_u16;
+    t_uint16 dataSent = (uartBuffer->TxSizeTaken_u16 < spaceToEnd) ? uartBuffer->TxSizeTaken_u16 : spaceToEnd;
+
+    uartBuffer->TxReadIndex_u16 = (uartBuffer->TxReadIndex_u16 + dataSent) % uartBuffer->TxBufferSize_u16;
+    uartBuffer->TxSizeTaken_u16 -= dataSent;
+
+    // S'il reste des données à transmettre
+    if (uartBuffer->TxSizeTaken_u16 > 0)
+    {
+        // Calculer à nouveau la taille à envoyer
+        spaceToEnd = uartBuffer->TxBufferSize_u16 - uartBuffer->TxReadIndex_u16;
+        t_uint16 dataToSend = (uartBuffer->TxSizeTaken_u16 < spaceToEnd) ? uartBuffer->TxSizeTaken_u16 : spaceToEnd;
+
+        // Envoyer la prochaine partie
+        HAL_UART_Transmit_IT(huart, &uartBuffer->TxBuffer_pu8[uartBuffer->TxReadIndex_u16], dataToSend);
+    }
+    else
+    {
+        uartBuffer->buffFlag_e = UART_BUFFER_READY; // Fin de la transmission
+    }
+}
+Gestion du buffer Rx :
+Pour le buffer Rx, on peut utiliser une logique similaire avec un buffer circulaire. La réception se fait en interruption, et on stocke les données dans le buffer en gérant les indices d'écriture.
+
+Pourquoi cette approche est-elle bonne ?
+Optimisation du temps CPU : le CPU ne bloque pas pendant l'envoi ou la réception.
+Robustesse : évite les pertes de données grâce à une gestion fine des buffers.
+Flexibilité : permet de transmettre ou recevoir des données en arrière-plan tout en ajoutant de nouvelles données.
+En résumé, c'est une approche efficace et robuste, utilisée couramment pour les systèmes embarqués à contraintes temps réel.
+
+
+HAL_UARTEx_ReceiveToIdle (Polling)
+
+Bloque l'exécution du programme jusqu'à ce que :
+Les données reçues atteignent la taille Size.
+Une condition IDLE est détectée (fin de la réception).
+Le Timeout expire.
+Le nombre de données effectivement reçues est renvoyé via le pointeur RxLen.
+HAL_UARTEx_ReceiveToIdle_IT (Interrupt)
+
+Fonctionne en mode interruption.
+La fin de réception est déclenchée par la détection d'IDLE.
+La callback HAL_UARTEx_RxEventCallback est appelée pour traiter les données.
+HAL_UARTEx_ReceiveToIdle_DMA (DMA)
+
+Utilise le DMA pour transférer les données de manière asynchrone.
+Une condition IDLE arrête le transfert DMA.
+La callback HAL_UARTEx_RxEventCallback est également utilisée.
+
+HAL_UARTEx_ReceiveToIdle	Détection de ligne IDLE	HAL_UARTEx_RxEventCallback	Réception de messages de taille variable sans timeout
+HAL_UART_ReceiverTimeout_Config	Timeout prédéfini (aucune donnée reçue)	HAL_UART_RxCpltCallback	Timeout pour les transmissions à taille inconnue/variable
+
+HAL_StatusTypeDef UART_AddToTxBuffer(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size) {
+    for (uint16_t i = 0; i < Size; i++) {
+        uint16_t nextHead = (txHead + 1) % TX_BUFFER_SIZE;
+        if (nextHead == txTail) {
+            return HAL_BUSY; // Buffer plein
+        }
+        txBuffer[txHead] = pData[i];
+        txHead = nextHead;
+    }
+    if (!txBusy) {
+        txBusy = 1;
+        UART_TransmitFromBuffer(huart);
+    }
+    return HAL_OK;
+}
+Fonction pour transmettre les données à partir du buffer circulaire :
+
+c
+Copier le code
+void UART_TransmitFromBuffer(UART_HandleTypeDef *huart) {
+    if (txHead != txTail) {
+        uint16_t size = 0;
+        uint16_t start = txTail;
+        while (txTail != txHead && size < 64) { // Transmettre max 64 octets
+            txTail = (txTail + 1) % TX_BUFFER_SIZE;
+            size++;
+        }
+        HAL_UART_Transmit_IT(huart, &txBuffer[start], size);
+    } else {
+        txBusy = 0; // Rien à transmettre
+    }
+}
+Callback pour continuer la transmission :
+
+c
+Copier le code
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+    UART_TransmitFromBuffer(huart);
+}

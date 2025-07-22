@@ -1,0 +1,2 @@
+HAL_UART_Receive_IT(&huart2, rxbuffer, 6);
+from    huart2, into rxbuffer, call interrupt whenver 6 bytes has been received
