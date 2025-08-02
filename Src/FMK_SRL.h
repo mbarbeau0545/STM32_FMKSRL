@@ -20,7 +20,15 @@
     // ********************************************************************
     // *                      Defines
     // ********************************************************************
-    
+    ///@brief enable/disable debug/ enable it dev, and disable it for prod
+    #define FMKSRL_DEBUG_UART_ENABLE
+
+    ///@brief Implementation of debug stuff
+    #ifdef FMKSRL_DEBUG_UART_ENABLE
+    #define FMKSRL_LOG(fmt, ...) FMKSRL_LogUartSend((FMKSRL_DEBUG_SERIAL_LINE), (fmt), ##__VA_ARGS__)
+    #else
+    #define FMKSRL_LOG(fmt, ...) ((void)0)
+    #endif
     // ********************************************************************
     // *                      Types
     // ********************************************************************
@@ -61,10 +69,8 @@
     typedef enum __t_eFMKSRL_TxOpeMode
     {
         FMKSRL_TX_ONESHOT = 0x00,               /**< Transmit one Message */
-        FMKSRL_TX_RX_SIZE,                      /**< Transmit one Message and configure the Rx line to receive a 
-                                                        message, user will be called when x bytes will be received.\n
-                                                        This mode is useful for Drivers using AT CMD for instance */
-
+        FMKSRL_TX_RX_SIZE,                      /**< Transmit one Message of size x and configure the Rx line to receive a 
+                                                message of Y bytes, user will be called when Y bytes will be received */
         FMKSRL_TX_RX_IDLE,                      /**< Transmit one Message and configure the Rx line to receive a 
                                                         message, user will be called when the line will be quiet again after starting receive msg.
                                                         This mode is useful for Drivers using AT CMD for instance. */
@@ -74,7 +80,8 @@
                                                         message, user will be called when the line is quiet for x millisecond, x will be indeicate by user.
                                                         This mode is useful for Drivers using AT CMD for instance. */
 #endif
-
+        FMKSRL_USART_TX_RX_SYNC,                /**< Transmit one byte and receive one byte in a sync useful in SPI/USART sensrs 
+                                                    ONLY AVAILABLE ON USART !!!! */
         FMKSRL_TX_NB                            /**< Number of Transmit Operation  */
     } t_eFMKSRL_TxOpeMode;
 
@@ -300,16 +307,19 @@ typedef enum __t_eFMKSRL_LineBaudrate
      */
     typedef enum __t_eFMKSRL_LineHealth
     {
-        FMKSRL_LINE_STATUS_OK = 0x00,       /**< UART/USART No Error detected */
-        FMKSRL_LINE_STATUS_PE,              /**< UART/USART Line Parity Error */
-        FMKSRL_LINE_STATUS_NE,              /**< UART/USART Noise Error */
-        FMKSRL_LINE_STATUS_FE,              /**< UART/USART Frame Error */
-        FMKSRL_LINE_STATUS_ORE,             /**< UART/USART Overrun Error */
-        FMKSRL_LINE_STATUS_DMA,             /**< UART/USART DMA Transfer Error */
-        FMKSRL_LINE_STATUS_RTO,             /**< UART/USART Receiver Timeout Error */
-        FMKSRL_LINE_STATUS_UDR,            /**< USART SPI Slave Underrun Error */
-
-        FMKSRL_LINE_STATUS_NB               /**< Number of Error Possible */
+        FMKSRL_LINE_ERROR_OK = 0x00,        /**< UART/USART No Error detected */
+        FMKSRL_LINE_ERROR_PE,               /**< UART/USART Line Parity Error */
+        FMKSRL_LINE_ERROR_NE,               /**< UART/USART Noise Error */
+        FMKSRL_LINE_ERROR_FE,               /**< UART/USART Frame Error */
+        FMKSRL_LINE_ERROR_ORE,              /**< UART/USART Overrun Error */
+        FMKSRL_LINE_ERROR_DMA,              /**< UART/USART DMA Transfer Error */
+        FMKSRL_LINE_ERROR_RTO,              /**< UART/USART Receiver Timeout Error */
+        FMKSRL_LINE_ERROR_UDR,              /**< USART SPI Slave Underrun Error */
+        FMKSRL_LINE_ERROR_SW_ERR,           /**< An erroc occured in this module */
+        FMKSRL_LINE_ERROR_RX_MSG_ABORT,     /**< A Rx Message has been aborted by bsp */
+        FMKSRL_LINE_ERROR_TX_MSG_ABORT,     /**< A Tx Message has been aborted by bsp */
+        FMKSRL_LINE_ERROR_CPLT_MSG_ABORT,   /**< A Rx,Tx Message has been aborted by bsp */
+        FMKSRL_LINE_ERROR_NB               /**< Number of Error Possible */
     } t_eFMKSRL_LineHealth;
 	/* CAUTION : Automatic generated code section for Structure: Start */
 
@@ -598,7 +608,24 @@ typedef enum __t_eFMKSRL_LineBaudrate
     t_eReturnCode FMKSRL_ConfigureReception(  t_eFMKSRL_SerialLine f_SrlLine_e, 
                                               t_eFMKSRL_RxOpeMode f_OpeMode_e,
                                               t_uint16 f_InfoOpe_u16);
-
+    /**
+    *
+    *	@brief      API use to make fast debug on uart, with the macro FMKSRL_LOG .
+    *   @note       The line has to be configured before ! 
+    *   @example    FMKSRL_LOG(FMKSRL_SERIAL_LINE_2, "Update timer %d", timer_Id_e, "Found it");
+    *               
+    *
+    *	@param[in]  f_SrlLine_e        : The Serial Line on Which the Configuration will be made, value from @ref t_eFMKSRL_SerialLine
+    *	@param[in]  f_OpeMode_e        : Receive Ope Mode , value from @ref t_eFMKSRL_TxOpeMode
+    *	@param[in]  f_InfoMode_u16     : In FMKSRL_OPE_RX_ONESHOT/CYLIC_SIZE     -> f_InfoMode_u16 will be the size of data expected to be received.
+    *                                    In FMKSRL_OPE_RX_ONESHOT/CYCLIC_IDLE    -> f_InfoMode_u16 is not used.
+    *                                    In FMKSRL_OPE_RX_ONESHOT/CYCLIC_TIMEOUT -> f_InfoMode_u16 will be the amount of time after 
+    *                                                                                   we consider the line is quiet. then you'll be called 
+    *
+    */
+    void FMKSRL_LogUartSend(t_eFMKSRL_SerialLine f_SrlLine_e,
+                                    const t_char * fmt,
+                                    ...);
     /**
     *
     *	@brief      DO NOT USE, Function to get the Handle Type def for IRQN_Handler Function
@@ -607,7 +634,7 @@ typedef enum __t_eFMKSRL_LineBaudrate
     *
     *
     */
-    void * FMKSRL_PRIVATE_GetHandleTypeDef( t_eFMKSRL_SerialLine f_SrlLine_u8,
+    void  FMKSRL_PRIVATE_GetHandleTypeDef(  t_eFMKSRL_SerialLine f_SrlLine_u8,
                                             UART_HandleTypeDef ** f_huartHandle_ps,
                                             USART_HandleTypeDef ** f_UsartHandle_ps);
 #endif // FMKSERIAL_INCLUDED           
