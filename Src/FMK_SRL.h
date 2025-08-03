@@ -20,14 +20,12 @@
     // ********************************************************************
     // *                      Defines
     // ********************************************************************
-    ///@brief enable/disable debug/ enable it dev, and disable it for prod
-    #define FMKSRL_DEBUG_UART_ENABLE
-
+    
     ///@brief Implementation of debug stuff
-    #ifdef FMKSRL_DEBUG_UART_ENABLE
-    #define FMKSRL_LOG(fmt, ...) FMKSRL_LogUartSend((FMKSRL_DEBUG_SERIAL_LINE), (fmt), ##__VA_ARGS__)
+    #if(FMKSRL_DEBUG_UART_ENABLE == M_TRUE)
+        #define FMKSRL_LOG(fmt, ...) FMKSRL_LogUartSend((FMKSRL_DEBUG_SERIAL_LINE), (fmt), ##__VA_ARGS__)
     #else
-    #define FMKSRL_LOG(fmt, ...) ((void)0)
+        #define FMKSRL_LOG(fmt, ...) ((void)0)
     #endif
     // ********************************************************************
     // *                      Types

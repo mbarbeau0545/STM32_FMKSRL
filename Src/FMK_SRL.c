@@ -922,11 +922,6 @@ t_eReturnCode FMKSRL_InitDrv(   t_eFMKSRL_SerialLine f_SrlLine_e,
         ASSERT((t_uint16)0);
         Ret_e = RC_ERROR_PARAM_INVALID;
     }
-    if(  (f_rcvMsgEvnt_pcb == (t_cbFMKSRL_RcvMsgEvent *)NULL_FUNCTION))
-    {
-        ASSERT((t_uint16)0);
-        Ret_e = RC_ERROR_PTR_NULL;
-    }
     if(g_SerialInfo_as[f_SrlLine_e].isLineConfigured_b == (t_bool)True)
     {
         ASSERT((t_uint16)0);
@@ -1008,14 +1003,7 @@ t_eReturnCode FMKSRL_Transmit(  t_eFMKSRL_SerialLine f_SrlLine_e,
     &&  (g_SerialInfo_as[f_SrlLine_e].isLineConfigured_b == (t_bool)False))
     {
         Ret_e = RC_ERROR_INSTANCE_NOT_INITIALIZED;
-    }
-
-    //------ Check Module State ------//
-    if(g_FmkSrl_ModState_e != STATE_CYCLIC_OPE)
-    {
-        Ret_e = RC_WARNING_BUSY;
-    }
-    
+    }    
     if(Ret_e == RC_OK)
     {
 
