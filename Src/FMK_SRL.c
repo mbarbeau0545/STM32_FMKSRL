@@ -25,6 +25,7 @@
 #include "FMK_CFG/FMKCFG_ConfigFiles/FMKSRL_ConfigPrivate.h"
 
 #include "Library/SafeMem/SafeMem.h"
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include "Constant.h"
@@ -1334,7 +1335,7 @@ static t_eReturnCode s_FMKSRL_Operational(void)
  *********************************/
 static t_eReturnCode s_FMKSRL_PerformDiagnostic(t_eFMKSRL_SerialLine  f_srlLine_e)
 {
-    t_eReturnCode Ret_e = RC_OK;
+    t_eReturnCode Ret_e;
     t_uint32 currentTime_u32;
     t_eFMKSRL_LineHealth srlLineStatus_e;
     t_sFMKSRL_SerialInfo * serialInfo_ps;
@@ -1343,61 +1344,63 @@ static t_eReturnCode s_FMKSRL_PerformDiagnostic(t_eFMKSRL_SerialLine  f_srlLine_
     {
         Ret_e = RC_ERROR_PARAM_INVALID;
     }
-    if(Ret_e == RC_OK)
+    else
     {
         serialInfo_ps = (t_sFMKSRL_SerialInfo *)(&g_SerialInfo_as[f_srlLine_e]);
         Ret_e = s_FMKSRL_GetLineErrorFromBsp(serialInfo_ps, &srlLineStatus_e);
-    }
-    if(Ret_e == RC_OK)
-    {
-        //----- Perform Action Based On the Error Code -----//
-        switch (srlLineStatus_e)
-        {
-            case FMKSRL_LINE_ERROR_PE:
-            case FMKSRL_LINE_ERROR_NE:
-            case FMKSRL_LINE_ERROR_FE:
-            case FMKSRL_LINE_ERROR_ORE:
-            case FMKSRL_LINE_ERROR_DMA:
-            case FMKSRL_LINE_ERROR_RTO:
-            case FMKSRL_LINE_ERROR_UDR:
-            case FMKSRL_LINE_ERROR_RX_MSG_ABORT:
-            case FMKSRL_LINE_ERROR_TX_MSG_ABORT:
-            case FMKSRL_LINE_ERROR_CPLT_MSG_ABORT:
-            {
-                serialInfo_ps->Health_e = srlLineStatus_e;
-                serialInfo_ps->ErrorCnt_u32 += (t_uint8)1;
-                break;
-            }
-            case FMKSRL_LINE_ERROR_OK:
-            break;
-            case FMKSRL_LINE_ERROR_NB:
-            {
-                Ret_e = RC_WARNING_NO_OPERATION;
-                break;
-            }
-        }
-        FMKCPU_GetTick(&currentTime_u32);
-        //---- see if errros is still active ----//
-        if(serialInfo_ps->Health_e != FMKSRL_LINE_ERROR_OK)
-        {
-            APPSDM_ReportDiagEvnt(  APPSDM_DIAG_ITEM_FMK_SRL_OPE_ERROR,
-                                    APPSDM_DIAG_ITEM_REPORT_FAIL,
-                                    (t_uint16)f_srlLine_e,
-                                    (t_uint16)serialInfo_ps->Health_e);
-            //---- reset the serial line state ans see if callback still call us with errors ----//
-            if((currentTime_u32 - serialInfo_ps->lastErrorOcc_u32) > 100)
-            {
-                serialInfo_ps->Health_e = FMKSRL_LINE_ERROR_OK;
-            }
 
-        }
-        else 
+        if(Ret_e == RC_OK)
         {
-            serialInfo_ps->flagErrDetected_b = (t_bool)FALSE;
-            APPSDM_ReportDiagEvnt(  APPSDM_DIAG_ITEM_FMK_SRL_OPE_ERROR,
-                                    APPSDM_DIAG_ITEM_REPORT_PASS,
-                                    (t_uint16)f_srlLine_e,
-                                    (t_uint16)0);
+            //----- Perform Action Based On the Error Code -----//
+            switch (srlLineStatus_e)
+            {
+                case FMKSRL_LINE_ERROR_PE:
+                case FMKSRL_LINE_ERROR_NE:
+                case FMKSRL_LINE_ERROR_FE:
+                case FMKSRL_LINE_ERROR_ORE:
+                case FMKSRL_LINE_ERROR_DMA:
+                case FMKSRL_LINE_ERROR_RTO:
+                case FMKSRL_LINE_ERROR_UDR:
+                case FMKSRL_LINE_ERROR_RX_MSG_ABORT:
+                case FMKSRL_LINE_ERROR_TX_MSG_ABORT:
+                case FMKSRL_LINE_ERROR_CPLT_MSG_ABORT:
+                case FMKSRL_LINE_ERROR_SW_ERR:
+                {
+                    serialInfo_ps->Health_e = srlLineStatus_e;
+                    serialInfo_ps->ErrorCnt_u32 += (t_uint8)1;
+                    break;
+                }
+                case FMKSRL_LINE_ERROR_OK:
+                break;
+                case FMKSRL_LINE_ERROR_NB:
+                {
+                    Ret_e = RC_WARNING_NO_OPERATION;
+                    break;
+                }
+            }
+            FMKCPU_GetTick(&currentTime_u32);
+            //---- see if errros is still active ----//
+            if(serialInfo_ps->Health_e != FMKSRL_LINE_ERROR_OK)
+            {
+                APPSDM_ReportDiagEvnt(  APPSDM_DIAG_ITEM_FMK_SRL_OPE_ERROR,
+                                        APPSDM_DIAG_ITEM_REPORT_FAIL,
+                                        (t_uint16)f_srlLine_e,
+                                        (t_uint16)serialInfo_ps->Health_e);
+                //---- reset the serial line state ans see if callback still call us with errors ----//
+                if((currentTime_u32 - serialInfo_ps->lastErrorOcc_u32) > 100)
+                {
+                    serialInfo_ps->Health_e = FMKSRL_LINE_ERROR_OK;
+                }
+
+            }
+            else 
+            {
+                serialInfo_ps->flagErrDetected_b = (t_bool)FALSE;
+                APPSDM_ReportDiagEvnt(  APPSDM_DIAG_ITEM_FMK_SRL_OPE_ERROR,
+                                        APPSDM_DIAG_ITEM_REPORT_PASS,
+                                        (t_uint16)f_srlLine_e,
+                                        (t_uint16)0);
+            }
         }
     }
 
@@ -1925,7 +1928,11 @@ static t_eReturnCode s_FMKSRL_UpdateTxBufferInfo(   t_sFMKSRL_SerialInfo * f_srl
         maxAllowedSize_u16 = (TxBuffer_s->bytesPending_u16 > FMKSRL_MAX_BYTES_TO_SEND) 
                                 ? FMKSRL_MAX_BYTES_TO_SEND 
                                 : TxBuffer_s->bytesPending_u16;
-
+                                
+        if(maxAllowedSize_u16 > TxBuffer_s->buffferSize_u16)
+        {
+            maxAllowedSize_u16 = TxBuffer_s->buffferSize_u16;
+        }
         //------ Check if a msg is currently send------//
         if(GETBIT(TxBuffer_s->status_u16, FMKSRL_BUFFSTATUS_BUSY) == BIT_IS_SET_16B)
         {

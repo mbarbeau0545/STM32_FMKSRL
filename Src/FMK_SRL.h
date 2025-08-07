@@ -611,7 +611,7 @@ typedef enum __t_eFMKSRL_LineBaudrate
     *	@brief      API use to make fast debug on uart, with the macro FMKSRL_LOG .
     *   @note       The line has to be configured before ! 
     *   @example    FMKSRL_LOG(FMKSRL_SERIAL_LINE_2, "Update timer %d", timer_Id_e, "Found it");
-    *               
+    *   @warning    FLOAT not allowed, nothin will pbe printed
     *
     *	@param[in]  f_SrlLine_e        : The Serial Line on Which the Configuration will be made, value from @ref t_eFMKSRL_SerialLine
     *	@param[in]  f_OpeMode_e        : Receive Ope Mode , value from @ref t_eFMKSRL_TxOpeMode
