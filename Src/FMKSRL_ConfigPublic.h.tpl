@@ -27,6 +27,11 @@
     // *                      Defines
     // ********************************************************************
     #define FMKSRL_TIMEOUT_RECEPTION ((t_uint32)60)
+
+    ///@brief enable/disable debug/ enable it dev, and disable it for prod
+    #define FMKSRL_DEBUG_UART_ENABLE            (M_TRUE)
+    ///@brief Debug serial line
+    #define FMKSRL_DEBUG_SERIAL_LINE (FMKSRL_SERIAL_LINE_2)
     // ********************************************************************
     // *                      Types
     // ********************************************************************
