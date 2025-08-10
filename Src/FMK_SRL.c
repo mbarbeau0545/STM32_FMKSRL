@@ -528,7 +528,7 @@ static t_eReturnCode s_FMKSRL_BspTxOpeTransmitMngmt(t_sFMKSRL_SerialInfo     * f
 *   @retval RC_ERROR_WRONG_RESULT               @ref RC_ERROR_WRONG_RESULT
 */
 static t_eReturnCode s_FMKSRL_BspTxOpeTransmitReceiveMngmt(t_sFMKSRL_SerialInfo * f_srlInfo_ps);
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
 
     /**
     *	@brief          Configure Advance Feature Init for UART\n
@@ -1067,7 +1067,7 @@ t_eReturnCode FMKSRL_Transmit(  t_eFMKSRL_SerialLine f_SrlLine_e,
                     }
                     break;
                 }
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
                 //------ Configure a Reception Msg with Callback Control base on Timeout ------//
                 case FMKSRL_TX_RX_TIMEOUT:
                 {
@@ -1216,7 +1216,7 @@ t_eReturnCode FMKSRL_ConfigureReception(  t_eFMKSRL_SerialLine f_SrlLine_e,
                 bspRxOpe_e = FMKSRL_BSP_RX_OPE_RECEIVE_IDLE;
                 break; 
             }
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
 
             //--------- Ope Rx TimeOut Managment ---------//
             case FMKSRL_OPE_RX_ONESHOT_TIMEOUT:
@@ -2043,7 +2043,7 @@ static t_eReturnCode s_FMKSRL_UpdateRxBufferInfo(t_sFMKSRL_SerialInfo * f_srlInf
                     Ret_e = s_FMKSRL_AbortMngmt(f_srlInfo_ps,
                                                 FMKSRL_OPE_ABORT_RECEPTION);
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
                     //------ Disable TimeOut ------//
                     if(Ret_e == RC_OK)
                     {
@@ -2460,7 +2460,7 @@ static t_eReturnCode s_FMKSRL_SetUartBspInit(   t_eFMKSRL_SerialLine      f_SrlL
         srlInfo_ps = (t_sFMKSRL_SerialInfo *)(&g_SerialInfo_as[f_SrlLine_e]);
         bspUartInit_ps = (UART_InitTypeDef *)(&srlInfo_ps->bspHandle_u.uartH_s.Init);
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
             
 
         //--------- Get Bsp Hardware Flow Control ---------//
@@ -2547,7 +2547,7 @@ static t_eReturnCode s_FMKSRL_SetUartBspInit(   t_eFMKSRL_SerialLine      f_SrlL
                     Ret_e = RC_ERROR_NOT_SUPPORTED;
                 }
             }
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
             if(bspRet_e == HAL_OK)
             {
                 Ret_e = s_FMKSRL_SetBspFifoCfg(&srlInfo_ps->bspHandle_u.uartH_s);
@@ -3101,7 +3101,7 @@ static t_eReturnCode s_FMKSRL_CallUserMngmt(t_sFMKSRL_SerialInfo * f_srlInfo_ps,
     return Ret_e;
 }
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
 /*********************************
  * s_FMKSRL_SetUartAdvanceCfg
  *********************************/
@@ -3669,7 +3669,7 @@ static t_eReturnCode s_FMKSRL_GetBspWordLenght( t_eFMKSRL_HwProtocolType f_HwPro
                     Ret_e = RC_ERROR_NOT_SUPPORTED;
                 }
                 break;
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
             case FMKSRL_LINE_WORDLEN_7BITS:
                 //--------- Depend on Hardware Protocol Used ---------//
                 if (f_HwProtUsed_e == FMKSRL_HW_PROTOCOL_UART)

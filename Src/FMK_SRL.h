@@ -49,7 +49,7 @@
         FMKSRL_OPE_RX_CYCLIC_IDLE,              /**< Receive Cyclic Msg, trigger for calling user is quiet again after starting receive msg.
                                                     This mode is useful for Drivers (GPS, etc). */
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
         FMKSRL_OPE_RX_ONESHOT_TIMEOUT,          /**< Receive one msg,  trigger for calling user when the line is
                                                         quiet for the amount of time indicate by user in millisecond.\n */
                                                         
@@ -73,7 +73,7 @@
                                                         message, user will be called when the line will be quiet again after starting receive msg.
                                                         This mode is useful for Drivers using AT CMD for instance. */
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
         FMKSRL_TX_RX_TIMEOUT,                   /**< Transmit one Message and configure the Rx line to receive a 
                                                         message, user will be called when the line is quiet for x millisecond, x will be indeicate by user.
                                                         This mode is useful for Drivers using AT CMD for instance. */
@@ -178,7 +178,7 @@ typedef enum __t_eFMKSRL_MProcessWakeUpMeth
     FMKSRL_MPROCESS_WAKEUP_NB              /**< Total number of wake-up methods. */
 } t_eFMKSRL_MProcessWakeUpMeth;
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
 /**
  * @brief Enumeration of UART hardware flow control options.
  *
@@ -232,7 +232,7 @@ typedef enum __t_eFMKSRL_LineWordLenght
 {
     FMKSRL_LINE_WORDLEN_9BITS = 0x00,       /**< Word length of 9 bits. */
     FMKSRL_LINE_WORDLEN_8BITS,              /**< Word length of 8 bits. */
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
     FMKSRL_LINE_WORDLEN_7BITS,              /**< Word length of 7 bits. */
 #endif
     FMKSRL_LINE_WORDLEN_NB                  /**< Total number of word length options. */
@@ -373,7 +373,7 @@ typedef enum __t_eFMKSRL_LineBaudrate
     {
         t_eFMKSRL_UartType Type_e;                          /**< Uart Type of Protocol */
         t_uFMKSRL_UartTypeCfgSpec typeCfg_u;                /**< Uart Config Specific of the Protocol */
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#if defined(FMKCPU_STM32_ECU_FAMILY_G4) || defined(FMKCPU_STM32_ECU_FAMILY_H7)
         t_sFMKSRL_UartAdvProtCfg    advProtCfg_s;           /**< Advance Configuration, not used at this point */
         t_eFMKSRL_UartHwFlowCtrl    hwFlowCtrl_e;           /**< Hardware Flow Control */
 #endif

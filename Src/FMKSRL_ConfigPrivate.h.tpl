@@ -56,7 +56,7 @@
     {
         FMKSRL_BSP_RX_OPE_RECEIVE = 0x00,       /**< Bsp Reception Size Operation */
         FMKSRL_BSP_RX_OPE_RECEIVE_IDLE,         /**< Bsp Reception Idle Operation */
-#ifdef FMKCPU_STM32_ECU_FAMILY_G
+#ifdef FMKCPU_STM32_ECU_FAMILY_G4
         FMKSRL_BSP_RX_OPE_RECEIVE_TIMEOUT,      /**< Bsp Reception Timeout Operation */
 #endif
         FMKSRL_BSP_RX_OPE_NB                    /**< Bsp Reception Operation Number */
