@@ -842,12 +842,7 @@ t_eReturnCode FMKSRL_Cyclic(void)
     {
         case STATE_CYCLIC_CFG:
         {
-            g_FmkSrl_ModState_e = STATE_CYCLIC_WAITING;
-            break;
-        }
-        case STATE_CYCLIC_WAITING:
-        {
-            // nothing to do, just wait all module are Ope
+            g_FmkSrl_ModState_e = STATE_CYCLIC_PREOPE;
             break;
         }
         case STATE_CYCLIC_PREOPE:
