@@ -17,13 +17,14 @@
     // *                      Includes
     // ********************************************************************
     #include "./FMK_CFG/FMKCFG_ConfigFiles/FMKSRL_ConfigPublic.h"
+    #include "./FMK_CFG/FMKCFG_ConfigSpecific/FMKSRL_ConfigSpecific.h"
     // ********************************************************************
     // *                      Defines
     // ********************************************************************
     
     ///@brief Implementation of debug stuff
     #if(FMKSRL_DEBUG_UART_ENABLE == M_TRUE)
-        #define FMKSRL_LOG(fmt, ...) FMKSRL_LogUartSend((FMKSRL_DEBUG_SERIAL_LINE), (fmt), ##__VA_ARGS__)
+        #define FMKSRL_LOG(fmt, ...) FMKSRL_LogUartSend((t_eFMKSRL_SerialLine)FMKSRL_DEBUG_SERIAL_LINE_IDX, (fmt), ##__VA_ARGS__)
     #else
         #define FMKSRL_LOG(fmt, ...) ((void)0)
     #endif
@@ -49,14 +50,12 @@
         FMKSRL_OPE_RX_CYCLIC_IDLE,              /**< Receive Cyclic Msg, trigger for calling user is quiet again after starting receive msg.
                                                     This mode is useful for Drivers (GPS, etc). */
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G4
         FMKSRL_OPE_RX_ONESHOT_TIMEOUT,          /**< Receive one msg,  trigger for calling user when the line is
                                                         quiet for the amount of time indicate by user in millisecond.\n */
                                                         
         FMKSRL_OPE_RX_CYCLIC_TIMEOUT,           /**< Receive one msg,  trigger for calling user when the line is
                                                         quiet for the amount of time indicates by user in millisecond.\n 
                                                         This mode is useful for Drivers (GPS, etc).\n */
-#endif
 
         FMKSRL_OPE_RX_NB,                       /**< Number of Rx Operation */
     } t_eFMKSRL_RxOpeMode;
@@ -73,11 +72,9 @@
                                                         message, user will be called when the line will be quiet again after starting receive msg.
                                                         This mode is useful for Drivers using AT CMD for instance. */
 
-#ifdef FMKCPU_STM32_ECU_FAMILY_G4
         FMKSRL_TX_RX_TIMEOUT,                   /**< Transmit one Message and configure the Rx line to receive a 
                                                         message, user will be called when the line is quiet for x millisecond, x will be indeicate by user.
                                                         This mode is useful for Drivers using AT CMD for instance. */
-#endif
         FMKSRL_USART_TX_RX_SYNC,                /**< Transmit one byte and receive one byte in a sync useful in SPI/USART sensrs 
                                                     ONLY AVAILABLE ON USART !!!! */
         FMKSRL_TX_NB                            /**< Number of Transmit Operation  */
@@ -177,28 +174,10 @@ typedef enum __t_eFMKSRL_MProcessWakeUpMeth
 
     FMKSRL_MPROCESS_WAKEUP_NB              /**< Total number of wake-up methods. */
 } t_eFMKSRL_MProcessWakeUpMeth;
-
-#ifdef FMKCPU_STM32_ECU_FAMILY_G4
 /**
  * @brief Enumeration of UART hardware flow control options.
  *
  * Defines the hardware flow control modes for UART peripherals.
- */
-typedef enum __t_eFMKSRL_UartHwFlowCtrl
-{
-    FMKSRL_UART_HW_FLOW_CTRL_NONE = 0X00,   /**< No hardware flow control. */
-    FMKSRL_UART_HW_FLOW_CTRL_RTS,           /**< RTS flow control enabled. */
-    FMKSRL_UART_HW_FLOW_CTRL_CTS,           /**< CTS flow control enabled. */
-    FMKSRL_UART_HW_FLOW_CTRL_RTS_CTS,       /**< Both RTS and CTS flow control enabled. */
-
-    FMKSRL_UART_HW_FLOW_CTRL_NB             /**< Total number of hardware flow control options. */
-} t_eFMKSRL_UartHwFlowCtrl;
-#endif
-
-/**
- * @brief Enumeration of UART/USART line modes.
- *
- * Specifies whether the line operates in receive, transmit, or both modes.
  */
 typedef enum __t_eFMKSRL_LineMode
 {
@@ -227,21 +206,6 @@ typedef enum __t_eFMKSRL_LineParity
  * @brief Enumeration of UART/USART line word lengths.
  *
  * Defines the number of data bits in a transmission frame.
- */
-typedef enum __t_eFMKSRL_LineWordLenght
-{
-    FMKSRL_LINE_WORDLEN_9BITS = 0x00,       /**< Word length of 9 bits. */
-    FMKSRL_LINE_WORDLEN_8BITS,              /**< Word length of 8 bits. */
-#ifdef FMKCPU_STM32_ECU_FAMILY_G4
-    FMKSRL_LINE_WORDLEN_7BITS,              /**< Word length of 7 bits. */
-#endif
-    FMKSRL_LINE_WORDLEN_NB                  /**< Total number of word length options. */
-} t_eFMKSRL_LineWordLenght;
-
-/**
- * @brief Enumeration of UART/USART line stop bits.
- *
- * Specifies the number of stop bits in a transmission frame.
  */
 typedef enum __t_eFMKSRL_LineSoptbit
 {
@@ -349,12 +313,6 @@ typedef enum __t_eFMKSRL_LineBaudrate
         t_sFMKSRL_MProcessCfg MProcessCfg_s;                /**< Multi Process Configuration */
     } t_uFMKSRL_UartTypeCfgSpec;
 
-    typedef struct __t_sFMKSRL_UartAdvProtCfg
-    {
-        t_uint8 None1_u8;
-        t_uint8 None2_u8;
-    } t_sFMKSRL_UartAdvProtCfg;
-
     /**
      * @brief USART Configuration, that differ from UART
      */
@@ -373,10 +331,8 @@ typedef enum __t_eFMKSRL_LineBaudrate
     {
         t_eFMKSRL_UartType Type_e;                          /**< Uart Type of Protocol */
         t_uFMKSRL_UartTypeCfgSpec typeCfg_u;                /**< Uart Config Specific of the Protocol */
-#ifdef FMKCPU_STM32_ECU_FAMILY_G4
         t_sFMKSRL_UartAdvProtCfg    advProtCfg_s;           /**< Advance Configuration, not used at this point */
         t_eFMKSRL_UartHwFlowCtrl    hwFlowCtrl_e;           /**< Hardware Flow Control */
-#endif
     } t_sFMKSRL_UartCfgSpec;
 
     /**

@@ -30,8 +30,6 @@
 
     ///@brief enable/disable debug/ enable it dev, and disable it for prod
     #define FMKSRL_DEBUG_UART_ENABLE            (M_TRUE)
-    ///@brief Debug serial line
-    #define FMKSRL_DEBUG_SERIAL_LINE (FMKSRL_SERIAL_LINE_2)
     // ********************************************************************
     // *                      Types
     // ********************************************************************
@@ -80,6 +78,43 @@
                                             /!\/!\ On Embeded System -> Highly recommended */
         FMKSRL_LINE_RUNMODE_NB
     } t_eFMKSRL_LineRunMode;
+
+    /**
+     * @brief Enumeration of UART hardware flow control options.
+     *
+     * Defines the hardware flow control modes for UART peripherals.
+     */
+    typedef enum __t_eFMKSRL_UartHwFlowCtrl
+    {
+        FMKSRL_UART_HW_FLOW_CTRL_NONE = 0X00,   /**< No hardware flow control. */
+        FMKSRL_UART_HW_FLOW_CTRL_RTS,           /**< RTS flow control enabled. */
+        FMKSRL_UART_HW_FLOW_CTRL_CTS,           /**< CTS flow control enabled. */
+        FMKSRL_UART_HW_FLOW_CTRL_RTS_CTS,       /**< Both RTS and CTS flow control enabled. */
+
+        FMKSRL_UART_HW_FLOW_CTRL_NB             /**< Total number of hardware flow control options. */
+    } t_eFMKSRL_UartHwFlowCtrl;
+
+    /**
+     * @brief Enumeration of UART/USART line word lengths.
+     *
+     * Defines the number of data bits in a transmission frame.
+     */
+    typedef enum __t_eFMKSRL_LineWordLenght
+    {
+        FMKSRL_LINE_WORDLEN_9BITS = 0x00,       /**< Word length of 9 bits. */
+        FMKSRL_LINE_WORDLEN_8BITS,              /**< Word length of 8 bits. */
+        FMKSRL_LINE_WORDLEN_7BITS,              /**< Word length of 7 bits. */
+        FMKSRL_LINE_WORDLEN_NB                  /**< Total number of word length options. */
+    } t_eFMKSRL_LineWordLenght;
+
+    /**
+     * @brief UART advanced protocol configuration placeholder.
+     */
+    typedef struct __t_sFMKSRL_UartAdvProtCfg
+    {
+        t_uint8 None1_u8;
+        t_uint8 None2_u8;
+    } t_sFMKSRL_UartAdvProtCfg;
 
     // ********************************************************************
     // *                      Prototypes
