@@ -23,11 +23,9 @@
 #include "3_APP/APP_CTRL/APP_SDM/Src/APP_SDM.h"
 
 #include "FMK_CFG/FMKCFG_ConfigFiles/FMKSRL_ConfigPrivate.h"
-
-#include "Library/SafeMem/SafeMem.h"
-#include <stdio.h>
 #include <stdarg.h>
-#include <string.h>
+#include <stdio.h>
+#include "Library/SafeMem/SafeMem.h"
 #include "Constant.h"
 // ********************************************************************
 // *                      Defines
@@ -421,12 +419,12 @@ t_eReturnCode FMKSRL_InitDrv(   t_eFMKSRL_SerialLine f_SrlLine_e,
     t_sFMKSRL_SerialInfo * srlInfo_ps;
     if(f_SrlLine_e >= FMKSRL_SERIAL_LINE_NB)
     {
-        ASSERT((t_uint16)0);
+        ASSERT((t_sint32)0);
         Ret_e = RC_ERROR_PARAM_INVALID;
     }
     if(g_SerialInfo_as[f_SrlLine_e].isLineConfigured_b == (t_bool)True)
     {
-        ASSERT((t_uint16)0);
+        ASSERT((t_sint32)0);
         Ret_e = RC_ERROR_ALREADY_CONFIGURED;
     }
     if(Ret_e == RC_OK)
@@ -624,47 +622,68 @@ t_eReturnCode FMKSRL_Transmit(  t_eFMKSRL_SerialLine f_SrlLine_e,
 void FMKSRL_LogUartSend(t_eFMKSRL_SerialLine f_SrlLine_e,
                         const t_char * fmt,
                         ...)
-{   
-    t_eReturnCode Ret_e;
-    t_sint16 lenMsg_s16;
-    t_uint16 lenPrefix_u16;
+{
+    t_eReturnCode Ret_e = RC_OK;
+    t_uint16 lenMsg_u16 = 0U;
+    t_uint16 lenPrefix_u16 = 0U;
     t_uint32 currentTime_u32;
+    va_list Args_s;
 
+    //---- 1- Check serial line ----//
     if(f_SrlLine_e >= FMKSRL_SERIAL_LINE_NB)
     {
-        ASSERT((t_uint16)0);
+        ASSERT((t_sint32)0);
     }
-    if(g_SerialInfo_as[f_SrlLine_e].isLineConfigured_b == (t_bool)False)
+    else if(g_SerialInfo_as[f_SrlLine_e].isLineConfigured_b == (t_bool)False)
     {
-        ASSERT((t_uint16)0);
+        ASSERT((t_sint32)0);
     }
     else
     {
+        //---- 2- Get timestamp ----//
         FMKCPU_GetTick(&currentTime_u32);
-        va_list args;
-        va_start(args, fmt);
-        lenPrefix_u16 = snprintf(g_UartBufferLog_uac,
-                            FMKSRL_UART_BUFFER_SIZE,
-                            "[%lu] ", (unsigned long)currentTime_u32);
 
-        lenMsg_s16 = vsnprintf(g_UartBufferLog_uac + lenPrefix_u16, 
+        //---- 3- Write log prefix ----//
+        Ret_e = SafeMem_snprintf(
+            (t_char *)g_UartBufferLog_uac,
+            FMKSRL_UART_BUFFER_SIZE,
+            &lenPrefix_u16,
+            "[%lu] ",
+            (unsigned long)currentTime_u32
+        );
+
+        if(Ret_e == RC_OK)
+        {
+            //---- 4- Format log message ----//
+            va_start(Args_s, fmt);
+
+            lenMsg_u16 = vsnprintf(g_UartBufferLog_uac + lenPrefix_u16, 
                                 (FMKSRL_UART_BUFFER_SIZE - lenPrefix_u16), 
                                 fmt, 
-                                args);
-        va_end(args);
+                                Args_s);
 
-        Ret_e = FMKSRL_Transmit(f_SrlLine_e,
-                                FMKSRL_TX_ONESHOT,
-                                (t_uint8 *)g_UartBufferLog_uac,
-                                (lenMsg_s16 + lenPrefix_u16),
-                                0, FALSE);
+            va_end(Args_s);
+        }
+
+        //---- 5- Send formatted log ----//
+        if(Ret_e == RC_OK)
+        {
+            Ret_e = FMKSRL_Transmit(
+                f_SrlLine_e,
+                FMKSRL_TX_ONESHOT,
+                (t_uint8 *)g_UartBufferLog_uac,
+                (t_uint16)(lenPrefix_u16 + lenMsg_u16),
+                0U,
+                FALSE
+            );
+        }
 
         if(Ret_e != RC_OK)
         {
-            ASSERT((t_uint16)0);
+            ASSERT((t_sint32)0);
         }
     }
-    
+
     return;
 }
 /*********************************
@@ -777,7 +796,7 @@ void FMKSRL_PRIVATE_GetHandleTypeDef( t_eFMKSRL_SerialLine f_SrlLine_u8,
     if(f_SrlLine_u8 >= (t_uint8)FMKSRL_SERIAL_LINE_NB)
     {
         
-        ASSERT((t_uint16)f_SrlLine_u8);
+        ASSERT((t_sint32)f_SrlLine_u8);
         *f_huartHandle_ps = (UART_HandleTypeDef *)NULL;
         *f_UsartHandle_ps = (USART_HandleTypeDef *)NULL;
     }
@@ -785,7 +804,7 @@ void FMKSRL_PRIVATE_GetHandleTypeDef( t_eFMKSRL_SerialLine f_SrlLine_u8,
     {
         if(g_SerialInfo_as[f_SrlLine_u8].isLineConfigured_b != (t_bool)True)
         {
-            ASSERT((t_uint16)f_SrlLine_u8);
+            ASSERT((t_sint32)f_SrlLine_u8);
         }
 
         if(g_SerialInfo_as[f_SrlLine_u8].SoftType_e == FMKSRL_HW_PROTOCOL_UART)
@@ -2158,7 +2177,7 @@ static t_eReturnCode s_FMKSRL_CopyData( t_sFMKSRL_BufferInfo * f_RxTxBuffer_s,
         sizeLeft_u16 = (t_uint16)(f_RxTxBuffer_s->buffferSize_u16 - f_RxTxBuffer_s->bytesPending_u16);
         if(sizeLeft_u16 < (t_uint16)f_dataSized_u16)
         {
-            ASSERT((t_uint16)sizeLeft_u16);
+            ASSERT((t_sint32)sizeLeft_u16);
             Ret_e = RC_WARNING_BUSY;
         }
         if(Ret_e == RC_OK)
